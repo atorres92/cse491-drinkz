@@ -17,6 +17,21 @@ def _reset_db():
 class LiquorMissing(Exception):
     pass
 
+class FailedToAddBottle(Exception):
+    pass
+
+class FailedToAddInventory(Exception):
+    pass
+
+class DataReaderException(Exception):
+    pass
+
+class FailedToReadCSV(Exception):
+    pass
+
+class InvalidFormatException(Exception):
+    pass
+
 def add_bottle_type(mfg, liquor, typ):
     "Add the given bottle type into the drinkz database."
     _bottle_types_db.append((mfg, liquor, typ))
@@ -46,12 +61,21 @@ def check_inventory(mfg, liquor):
 
 def get_liquor_amount(mfg, liquor):
     "Retrieve the total amount of any given liquor currently in inventory."
-    amounts = []
+    #amounts = []
+    total = 0
     for (m, l, amount) in _inventory_db:
         if mfg == m and liquor == l:
-            amounts.append(amount)
+            if ( amount[-1] == 'l' ) and ( amount[-2] == 'm' ):
+                total = total + int( amount.strip('ml') )
+            elif ( amount[-1] == 'z' ) and ( amount[-2] == 'o' ):
+                #amounts.append(amount)
+                #convert to ml
+                i = int( amount.strip('oz') )
+                i = i * 29
+                total = total + i
 
-    return amounts[0]
+    total = str(total) + " ml"
+    return total
 
 def get_liquor_inventory():
     "Retrieve all liquor types in inventory, in tuple form: (mfg, liquor)."

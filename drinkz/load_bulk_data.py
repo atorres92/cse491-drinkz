@@ -12,6 +12,32 @@ import csv                              # Python csv package
 
 from . import db                        # import from local package
 
+def data_reader(fp):
+    """
+    Eliminates whitespace and commented lines
+
+    Takes a file pointer.
+
+    Is a generator wrapper around csv.reader
+
+    Returns a list of records without whitespace or comments
+    """
+    try:
+        reader = csv.reader(fp)
+    except:
+        db.FailedToReadCSV(Exception)
+        
+    x = []
+    n = 0
+
+    for x in reader:
+        if (len(x) == 0):
+            continue
+        if ( not x[0].strip() ) or ( x[0].startswith('#') ):
+            continue
+        n += 1
+        yield x
+
 def load_bottle_types(fp):
     """
     Loads in data of the form manufacturer/liquor name/type from a CSV file.
@@ -22,17 +48,23 @@ def load_bottle_types(fp):
 
     Returns number of bottle types loaded
     """
-    reader = csv.reader(fp)
-
+    try:
+        new_reader = data_reader(fp)
+    except:
+        db.DataReaderException(Exception)
+        
     x = []
     n = 0
-    for line in reader:
-        if line[0].startswith('#'):
-            continue
-        
-        (mfg, name, typ) = line
+    for line in new_reader:
+        try:            
+            (mfg, name, typ) = line
+        except:
+            db.InvalidFormatException(Exception)
         n += 1
-        db.add_bottle_type(mfg, name, typ)
+        try:
+            db.add_bottle_type(mfg, name, typ)
+        except:
+            db.FailedToAddBottle(Exception)
 
     return n
 
@@ -49,12 +81,23 @@ def load_inventory(fp):
     Note that a LiquorMissing exception is raised if bottle_types_db does
     not contain the manufacturer and liquor name already.
     """
-    reader = csv.reader(fp)
-
+    try:
+        new_reader = data_reader(fp)
+    except:
+        db.DataReaderException(Exception)
+    
     x = []
     n = 0
-    for (mfg, name, amount) in reader:
+    
+    for line in new_reader:
+        try:
+            (mfg, name, amount) = line
+        except:
+            db.InvalidFormatException(Exception)
         n += 1
-        db.add_to_inventory(mfg, name, amount)
-
+        try:   
+            db.add_to_inventory(mfg, name, amount)
+        except:
+            db.FailedToAddInventory(Exception)
+    
     return n

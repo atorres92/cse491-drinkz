@@ -1,0 +1,2 @@
+#BAD DATA FILE! (this line should be ignored though)
+Johnnie Walker,,,,Black Label,100000 ml

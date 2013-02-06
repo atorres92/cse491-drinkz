@@ -1,0 +1,17 @@
+import drinkz.db
+
+drinkz.db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
+drinkz.db.add_to_inventory('Johnnie Walker', 'Black Label', '1000 ml')
+drinkz.db.add_to_inventory('Johnnie Walker', 'Black Label', '25 oz') 
+
+
+seen = set()
+
+print 'Manufacturer\tLiquor\tAmount'
+print '------------\t------\t---------'
+for mfg, liquor in drinkz.db.get_liquor_inventory():
+    if (mfg, liquor) in seen:
+       continue
+    seen.add((mfg,liquor))
+    amt = drinkz.db.get_liquor_amount(mfg,liquor)
+    print '%s\t%s\t%s' % (mfg, liquor, amt)

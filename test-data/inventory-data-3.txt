@@ -1,0 +1,4 @@
+#this should be ignored
+#this too!!!
+#but this should throw exception:
+JohnnieWalker, asdf, asdf, adsf, asdf, asdf, asdf, !!!! , 5 oz

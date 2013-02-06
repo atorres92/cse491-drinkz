@@ -1,0 +1,2 @@
+#This text should be ignored.  GOOD data file though
+Johnnie Walker,Black Label,1000 ml
