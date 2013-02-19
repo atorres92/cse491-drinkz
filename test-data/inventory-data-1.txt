@@ -1,2 +1,3 @@
-#This text should be ignored.  GOOD data file though
-Johnnie Walker,Black Label,1000 ml
+# this file has, at the end, a blank line, which should be handled
+# (ignored!) by our loading script - just like these comments.
+Johnnie Walker,Black Label,1234 ml
