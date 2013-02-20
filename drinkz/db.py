@@ -1,5 +1,9 @@
 """
 Database functionality for drinkz information.
+_bottle_types_db is a set because they are just elements of items
+_inventory_db is a dictionary because each inventory item will have a value, that is, the amount of liquor for that specific (mfg,liquor)
+_recipe_db is a dict as well because the name will be the key, and the recipe for that name will be the value of the dict
+
 """
 
 # private singleton variables at module level
@@ -8,9 +12,10 @@ _inventory_db = {}
 _recipe_db = {}
 def _reset_db():
     "A method only to be used during testing -- toss the existing db info."
-    global _bottle_types_db, _inventory_db
+    global _bottle_types_db, _inventory_db, _recipe_db
     _bottle_types_db = set()
     _inventory_db = {}
+    _recipe_db = {}
 
 # exceptions in Python inherit from Exception and generally don't need to
 # override any methods.
@@ -37,13 +42,14 @@ def add_bottle_type(mfg, liquor, typ):
     _bottle_types_db.add((mfg, liquor, typ))
 
 def add_recipe(r):
-    _recipe_db[r.name] = r
+    _recipe_db[r.get_name()] = r
     
 def get_recipe(name):
-    if name in _recipe_db.values():
-        return recipe_db.get(name)
+    if name in _recipe_db.keys():
+        return _recipe_db.get(name)
     
 def get_all_recipes():
+    valueList = []
     for values in _recipe_db.values():
         valueList.append(values)
     return valueList
@@ -71,17 +77,29 @@ def convert_to_ml(amt):
         amtNum = '0 ml'
     return amtNum
 
+def check_inventory_for_type(typ):
+    b_list = []
+    for bottle in _bottle_types_db:
+        if typ in bottle:
+            b_list.append((bottle[0], bottle[1]))
+
+    return b_list
+
 def check_recipe_needs(ing):
-    for (m, l, t) in _bottle_types_db:
-        if ing[0] == m or ing[0] == l or ing[0] == t:
-            amtNeeded = convert_to_ml(ing[1])
-            currAmount = db.get_liquor_amount(m,l)
-            if amtNeeded > currAmount:
-                return [(ing[0], (amtNeeded - currAmount))] 
-            else:
-                return [(ing[0], 0)]
+    amtNeeded = convert_to_ml(ing[1])
+    bottlesMatch = check_inventory_for_type(ing[0])
+    amtList = []
+    for bottle in bottlesMatch:
+        amtList.append(get_liquor_amount(bottle[0],bottle[1]))
+    amtList.sort()
+    if len(amtList) > 0:
+        currAmount = amtList[-1]
+        if amtNeeded > currAmount:
+            return (ing[0], (amtNeeded - currAmount))
         else:
-            return [(ing[0], ing[1])]
+            return (ing[0], 0)
+    else:
+        return (ing[0], amtNeeded)
 
 def add_to_inventory(mfg, liquor, amount):
     "Add the given liquor/amount to inventory."
