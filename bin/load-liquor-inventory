@@ -3,21 +3,43 @@ import sys
 import _mypath
 
 from drinkz.load_bulk_data import load_inventory
-
+from drinkz.load_bulk_data import load_bottle_types
 def main(args):
-   if len(args) != 2:
+   if len(args) < 2:
       print >>sys.stderr, 'Usage: %s file_to_load.csv'
       return -1
 
-   filename = args[1]
+   n = 0
+   n2 = 0
+   
+   if len(args) == 2:
+      
+      filename = args[1]
+      fp = open(filename)
+      try:
+         n2 = load_inventory(fp)
+      finally:
+         fp.close()
 
-   fp = open(filename)
-   try:
-      n = load_inventory(fp)
-   finally:
-      fp.close()
+   if len(args) == 3:
+      bottle_path = args[2]
+      inven_path = args[2]
+      
+      fp2 = open(bottle_path)
+      fp3 = open(inven_path)
+      
+      try:
+         n = load_bottle_types(fp2)
+      finally:
+         fp2.close()
+
+      try:
+         n2 = load_inventory(fp3)
+      finally:
+         fp3.close()
 
    print 'Loaded %d bottle types.' % n
+   print 'Loaded %d inventory.' % n2
    return 0
     
 # run the 'main()' function if this script is run from the command line;

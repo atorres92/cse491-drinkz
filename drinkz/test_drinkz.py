@@ -48,7 +48,7 @@ def test_get_liquor_amount_1():
     db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
     db.add_to_inventory('Johnnie Walker', 'Black Label', '1000 ml')
     amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
-    assert amount == '1000.0 ml', amount
+    assert amount == 1000.0, amount
 
 def test_bulk_load_inventory_1():
     db._reset_db()
@@ -94,7 +94,7 @@ def test_get_liquor_amount_2():
     n = load_bulk_data.load_inventory(fp)
 
     amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
-    assert amount == '1000.0 ml', amount
+    assert amount == 1000.0, amount
 
 def test_get_liquor_amount_3():
     db._reset_db()
@@ -106,7 +106,8 @@ def test_get_liquor_amount_3():
     n = load_bulk_data.load_inventory(fp)
 
     amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
-    assert amount == '1828.058 ml', amount
+    assert amount == 1828.058, amount
+    
 def test_get_liquor_amount_4():
     db._reset_db()
 
@@ -117,7 +118,7 @@ def test_get_liquor_amount_4():
     n = load_bulk_data.load_inventory(fp)
 
     amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
-    assert amount == '1828.058 ml', amount
+    assert amount == 1828.058, amount
 
 def test_bulk_load_bottle_types_1():
     db._reset_db()

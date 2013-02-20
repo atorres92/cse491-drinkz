@@ -49,12 +49,17 @@ def add_to_inventory(mfg, liquor, amount):
         err = "Missing liquor: manufacturer '%s', name '%s'" % (mfg, liquor)
         raise LiquorMissing(err)
 
+    print 'adding: ' + str(amount)
     if (mfg, liquor) in _inventory_db:
 
         if ( amount[-2:] == 'oz' ):
             amount = float( amount.strip('oz') )
             amount *= 29.5735
             _inventory_db[(mfg, liquor)] += amount
+        elif ( amount[-6:] == 'gallon' ):
+            amount = float( amount.strip('gallon') )
+            amount *= 3785.41
+            _inventory_db[(mfg,liquor)] += amount
         elif ( amount[-2:] == 'ml' ):
             amount = float( amount.strip('ml'))
             _inventory_db[(mfg,liquor)] += amount
@@ -63,6 +68,10 @@ def add_to_inventory(mfg, liquor, amount):
             amount = float( amount.strip('oz') )
             amount *= 29.5735
             _inventory_db[(mfg, liquor)] = amount
+        elif ( amount[-6:] == 'gallon' ):
+            amount = float( amount.strip('gallon') )
+            amount *= 3785.41
+            _inventory_db[(mfg,liquor)] = amount
         elif ( amount[-2:] == 'ml' ):
             amount = float( amount.strip('ml'))
             _inventory_db[(mfg,liquor)] = amount
@@ -79,7 +88,7 @@ def get_liquor_amount(mfg, liquor):
     total = 0
     if ( (mfg,liquor) in _inventory_db ):
         total = _inventory_db.get((mfg,liquor))            
-        total = str(total) + " ml"
+        #total = str(total) + " ml" 
     return total
 
 def get_liquor_inventory():
