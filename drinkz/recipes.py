@@ -11,13 +11,8 @@ class Recipe(object):
         neededIng = []
         for ingredient in self._ingredients:
             needed = db.check_recipe_needs(ingredient)
-            print needed
             if needed[1] > 0:
-                print 'check?'
                 neededIng.append(needed)
-            print 'check2!'
-            print neededIng
-            print 'okay...'
         return neededIng
 
     def get_name(self):
