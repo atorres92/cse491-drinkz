@@ -37,11 +37,16 @@ class FailedToReadCSV(Exception):
 class InvalidFormatException(Exception):
     pass
 
+class DuplicateRecipeName(Exception):
+    pass
+
 def add_bottle_type(mfg, liquor, typ):
     "Add the given bottle type into the drinkz database."
     _bottle_types_db.add((mfg, liquor, typ))
 
 def add_recipe(r):
+    if ( r.get_name() in _recipe_db ):
+        raise DuplicateRecipeName
     _recipe_db[r.get_name()] = r
     
 def get_recipe(name):
