@@ -28,14 +28,12 @@ def data_reader(fp):
         db.FailedToReadCSV(Exception)
         
     x = []
-    n = 0
 
     for x in reader:
-        if (len(x) == 0):
+        if (len(x) < 3):
             continue
         if ( not x[0].strip() ) or ( x[0].startswith('#') ):
             continue
-        n += 1
         yield x
 
 def load_bottle_types(fp):
@@ -56,15 +54,15 @@ def load_bottle_types(fp):
     x = []
     n = 0
     for line in new_reader:
-        try:            
+        try:
             (mfg, name, typ) = line
         except:
             db.InvalidFormatException(Exception)
-        n += 1
         try:
             db.add_bottle_type(mfg, name, typ)
         except:
             db.FailedToAddBottle(Exception)
+        n+=1
 
     return n
 
@@ -94,10 +92,9 @@ def load_inventory(fp):
             (mfg, name, amount) = line
         except:
             db.InvalidFormatException(Exception)
-        n += 1
         try:   
             db.add_to_inventory(mfg, name, amount)
         except:
             db.FailedToAddInventory(Exception)
-    
+        n+=1
     return n

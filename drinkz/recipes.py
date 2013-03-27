@@ -1,6 +1,6 @@
 # import drinkz.recipes.py
 
-from . import db
+import db
 
 class Recipe(object):
     def __init__(self, recipeName, listOfIngredTuples):

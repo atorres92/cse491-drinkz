@@ -1,0 +1,17 @@
+#! /usr/bin/env python
+import sys
+import _mypath
+from drinkz.app import startServer
+
+'''
+Script to start up a Web application
+'''
+
+
+def main(args):
+    startServer()
+    return 0
+
+if __name__ == "__main__":
+   exit_code = main(sys.argv)
+   sys.exit(exit_code)

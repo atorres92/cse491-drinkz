@@ -6,6 +6,8 @@ _recipe_db is a dict as well because the name will be the key, and the recipe fo
 
 """
 
+import convert
+
 # private singleton variables at module level
 _bottle_types_db = set()
 _inventory_db = {}
@@ -66,22 +68,6 @@ def _check_bottle_type_exists(mfg, liquor):
 
     return False
 
-def convert_to_ml(amt):
-    if amt[-2:] == 'ml':
-        amtNum = float(amt.strip('ml'))
-    elif amt[-2:] == 'oz':
-        amtNum = float(amt.strip('oz'))
-        amtNum *= 29.5735
-    elif amt[-5:] == 'liter':
-        amtNum = float(amt.strip('liter'))
-        amtNum *= 1000
-    elif amt[-6:] == 'gallon':
-        amtNum = float(amt.strip('gallon'))
-        amtNum *= 3785.41
-    else:
-        amtNum = '0 ml'
-    return amtNum
-
 def check_inventory_for_type(typ):
     b_list = []
     for bottle in _bottle_types_db:
@@ -91,7 +77,7 @@ def check_inventory_for_type(typ):
     return b_list
 
 def check_recipe_needs(ing):
-    amtNeeded = convert_to_ml(ing[1])
+    amtNeeded = convert.convert_to_ml(ing[1])
     bottlesMatch = check_inventory_for_type(ing[0])
     amtList = []
     for bottle in bottlesMatch:
@@ -112,7 +98,7 @@ def add_to_inventory(mfg, liquor, amount):
         err = "Missing liquor: manufacturer '%s', name '%s'" % (mfg, liquor)
         raise LiquorMissing(err)
 
-    amount = convert_to_ml(amount)
+    amount = convert.convert_to_ml(amount)
     
     if (mfg,liquor) in _inventory_db:
         _inventory_db[(mfg,liquor)] += amount
@@ -123,7 +109,7 @@ def check_inventory(mfg, liquor):
     for key in _inventory_db.keys():
         if mfg == key[0] and liquor == key[1]:
             return True
-        
+
     return False
 
 def get_liquor_amount(mfg, liquor):
