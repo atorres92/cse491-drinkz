@@ -172,10 +172,17 @@ alert("What were you thinking?!");
         return str( convert.convert_to_ml(amount) )
 
     def rpc_get_recipe_names( self ):
-        return db.get_all_recipes()
+        r = db.get_all_recipes()
+        final = []
+        for recipe in r:
+            final.append(recipe.get_name())
+        return final
 
     def rpc_get_liquor_inventory( self ):
-        return get_liquor_inventory()
+        i = list()
+        for (m,l) in db.get_liquor_inventory():
+            i.append((m,l))
+        return i
 
     def rpc_hello(self):
         return 'world!'
