@@ -6,6 +6,8 @@ import db
 import recipes
 import convert
 
+import sys
+
 dispatch = {
     '/' : 'index',
     '/error' : 'error',
@@ -18,30 +20,13 @@ dispatch = {
 }
 
 html_headers = [('Content-type', 'text/html')]
-
-db._reset_db()
-
-db.add_bottle_type('Johnnie Walker', 'black label', 'blended scotch')
-db.add_to_inventory('Johnnie Walker', 'black label', '500 ml')
-
-db.add_bottle_type('Uncle Herman\'s', 'moonshine', 'blended scotch')
-db.add_to_inventory('Uncle Herman\'s', 'moonshine', '5 liter')
-
-db.add_bottle_type('Gray Goose', 'vodka', 'unflavored vodka')
-db.add_to_inventory('Gray Goose', 'vodka', '1 liter')
-
-db.add_bottle_type('Rossi', 'extra dry vermouth', 'vermouth')
-db.add_to_inventory('Rossi', 'extra dry vermouth', '24 oz')
-
-r1 = recipes.Recipe('scotch on the rocks', [('blended scotch', '4 oz')])
-r2 = recipes.Recipe('whiskey bath', [('blended scotch', '6 liter')])
-db.add_recipe(r1)
-db.add_recipe(r2)
-
 liquor_types = []
 
-for mfg, liquor in db.get_liquor_inventory():
-    liquor_types.append((mfg, liquor))
+def initDB():
+    db.load_db('database')
+
+    for mfg, liquor in db.get_liquor_inventory():
+        liquor_types.append((mfg, liquor))
 
 class SimpleApp(object):
     def __call__(self, environ, start_response):
@@ -62,11 +47,26 @@ class SimpleApp(object):
             
     def index(self, environ, start_response):
         data = """
+<html>
+<title>cse491-drinkz home</title>
+<head>
+<style type="text/css">
+h1 {color:red;}</style><b><h1>Home Page</h1></b></head>
+<body>
 <p>Index</p>
 <p><a href='recipes'>Recipes</a></p>
 <p><a href='inventory'>Inventory</a></p>
 <p><a href='liquortypes'>Liquor Types</a></p>
 <p><a href='converter'>Converter</a></p>
+</body>
+<script>
+function alertBox()
+{
+alert("What were you thinking?!");
+}
+</script>
+<input type="button" onclick="alertBox()" value="DON'T CLICK!">
+</html>
 """
         start_response('200 OK', list(html_headers))
         return [data]
@@ -168,6 +168,15 @@ class SimpleApp(object):
         response = simplejson.dumps(response)
         return str(response)
     
+    def rpc_convert_units_to_ml( self, amount ):
+        return str( convert.convert_to_ml(amount) )
+
+    def rpc_get_recipe_names( self ):
+        return db.get_all_recipes()
+
+    def rpc_get_liquor_inventory( self ):
+        return get_liquor_inventory()
+
     def rpc_hello(self):
         return 'world!'
 
@@ -176,14 +185,27 @@ class SimpleApp(object):
     
 def converter():
     return """
+<html>
+<title>Convert to mL</title>
+<head><style type="text/css">
+h1 {color:red;}</style><b><h1>Converter</h1></b></head>
+<body>
 <form action='recv'>
 Amount of liquid to convert to ml? <input type='text' name='amount' size'20'>
 <input type='submit'>
 </form>
-<p><a href='./'>Index</a></p>"""
+<p><a href='./'>Index</a></p>
+</body>
+</html>
+"""
         
 def recipes():
     html =  """
+<html>
+<title>Recipes here!</title>
+<head><style type="text/css">
+h1 {color:red;}</style><b><h1>Recipes</h1></b></head>
+<body>
 <p><a href='./'>Index</a></p>
 <p>Recipes</p>
 <p><a href='inventory'>Inventory</a></p>
@@ -207,13 +229,16 @@ def recipes():
         final += name + result
 
 
-    end = """
-    </tr>
-        </table>"""
+    end = """</tr></table></body></html>"""
     return html + final + end
 
 def inventory():
     html =  """
+<html>
+<title>Inventory!!!</title>
+<head><style type="text/css">
+h1 {color:red;}</style><b><h1>Your inventory</h1></b></head>
+<body>
 <p><a href='./'>Index</a></p>
 <p><a href='recipes'>Recipes</a></p>
 <p>Inventory</p>
@@ -230,10 +255,7 @@ def inventory():
     for liquor_typ in liquor_types:
         result += "<tr><td>" + liquor_typ[0] + "</td><td>" + liquor_typ[1] + "</td><td>" + str(db.get_liquor_amount(liquor_typ[0], liquor_typ[1])) + " ml</td></tr>"
 
-    end = """
-                    </tr>
-                    </table>
-                    """
+    end = """</tr></table></body></html>"""
     return html + result + end
 
 def liquortypes():
@@ -243,7 +265,9 @@ def liquortypes():
     end = ""
     
     html = """
-    <p><a href='./'>Index</a></p>
+<html><title>Liquor types!</title><head><style type="text/css">
+h1 {color:red;}</style><b><h1>Liquor Types</h1></b></head>
+    <body><p><a href='./'>Index</a></p>
     <p><a href='recipes'>Recipes</a></p>
     <p><a href='inventory'>Inventory</a></p>
     <p>Liquor Types</p>
@@ -257,14 +281,15 @@ def liquortypes():
     for liquor_typ in liquor_types:
         temp = "<tr><td>" + liquor_typ[0] + "</td><td>" + liquor_typ[1] + "</td></tr>"
         final += temp
-    end = """</table>"""
+    end = """</table></body></html>"""
     return html + final + end
 
 
 def startServer():
     import random, socket
     port = random.randint(8000, 9999)
-    
+
+    initDB()
     app = SimpleApp()
     
     httpd = make_server('', port, app)

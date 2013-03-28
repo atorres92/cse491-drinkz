@@ -10,31 +10,12 @@ except OSError:
     #already exists
     pass
 
-drinkz.db._reset_db()
-
-drinkz.db.add_bottle_type('Johnnie Walker', 'black label', 'blended scotch')
-drinkz.db.add_to_inventory('Johnnie Walker', 'black label', '500 ml')
-
-drinkz.db.add_bottle_type('Uncle Herman\'s', 'moonshine', 'blended scotch')
-drinkz.db.add_to_inventory('Uncle Herman\'s', 'moonshine', '5 liter')
-
-drinkz.db.add_bottle_type('Gray Goose', 'vodka', 'unflavored vodka')
-drinkz.db.add_to_inventory('Gray Goose', 'vodka', '1 liter')
-
-drinkz.db.add_bottle_type('Rossi', 'extra dry vermouth', 'vermouth')
-drinkz.db.add_to_inventory('Rossi', 'extra dry vermouth', '24 oz')
-
-r1 = drinkz.recipes.Recipe('scotch on the rocks', [('blended scotch', '4 oz')])
-r2 = drinkz.recipes.Recipe('whiskey bath', [('blended scotch', '6 liter')])
-drinkz.db.add_recipe(r1)
-drinkz.db.add_recipe(r2)
-
+drinkz.db.load_db('bin/database')
 
 liquor_types = []
 
 for mfg, liquor in drinkz.db.get_liquor_inventory():
     liquor_types.append((mfg, liquor))
-
 
 ###
 
