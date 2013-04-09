@@ -3,15 +3,22 @@ from wsgiref.simple_server import make_server
 import urlparse
 import simplejson
 import db
+import load_bulk_data
 import recipes
 import convert
 
 import sys
 
+from cStringIO import StringIO
+import imp
+
 dispatch = {
     '/' : 'index',
     '/error' : 'error',
     '/recv' : 'recv',
+    '/recv_inventory_add' : 'recv_inventory_add',
+    '/recv_bottle_add' : 'recv_bottle_add',
+    '/recv_recipe_add' : 'recv_recipe_add',
     '/rpc'  : 'dispatch_rpc',
     '/recipes' : 'recipes',
     '/inventory' : 'inventory',
@@ -20,13 +27,13 @@ dispatch = {
 }
 
 html_headers = [('Content-type', 'text/html')]
-liquor_types = []
+#liquor_types = []
 
 def initDB():
     db.load_db('database')
 
-    for mfg, liquor in db.get_liquor_inventory():
-        liquor_types.append((mfg, liquor))
+#    for mfg, liquor in db.get_liquor_inventory():
+#        liquor_types.append((mfg, liquor))
 
 class SimpleApp(object):
     def __call__(self, environ, start_response):
@@ -128,6 +135,61 @@ alert("What were you thinking?!");
         start_response('200 OK', list(html_headers))
         return [data]
 
+    def recv_inventory_add(self, environ, start_response):
+        formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+
+        if ( 'liquor' in results.keys() ):
+            liquorStr = results['liquor'][0]
+        else:
+            liquorStr = "#"
+
+        content_type = 'text/html'
+        data = liquorStr
+        fp = StringIO(data)
+        load_bulk_data.load_inventory(fp)
+        data = "Added Liquor: %s<p><a href='./'>Index</a>" % liquorStr
+
+        start_response('200 OK', list(html_headers) )
+        return [data]
+
+    def recv_bottle_add(self, environ, start_response):
+        formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+
+        if ( 'bottle' in results.keys() ):
+            bottleStr = results['bottle'][0]
+        else:
+            bottleStr = "#"
+
+        content_type = 'text/html'
+        data = bottleStr
+        fp = StringIO(data)
+        load_bulk_data.load_bottle_types(fp)
+        db.get_all_bottle_types()
+        data = "Added Bottle Type: %s<p><a href='./'>Index</a>" % bottleStr
+
+        start_response('200 OK', list(html_headers) )
+        return [data]
+    
+    def recv_recipe_add(self, environ, start_response):
+        formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+
+        if ( 'recipe' in results.keys() ):
+            recipeStr = results['recipe'][0]
+        else:
+            recipeStr = '#'
+
+        data = recipeStr
+        fp = StringIO(data)
+        load_bulk_data.load_recipes(fp)
+        content_type = 'text/html'
+        data = "Added Recipe: %s<p><a href='./'>Index</a>" % recipeStr
+        
+        start_response('200 OK', list(html_headers) )
+        return [data]
+    
     def dispatch_rpc(self, environ, start_response):
         # POST requests deliver input data via a file-like handle,
         # with the size of the data specified by CONTENT_LENGTH;
@@ -236,7 +298,14 @@ h1 {color:red;}</style><b><h1>Recipes</h1></b></head>
         final += name + result
 
 
-    end = """</tr></table></body></html>"""
+    end = """
+</tr></table>
+<br>
+<form action='recv_recipe_add'>
+Recipe to add? (Format: recipeName,ingrName::ingrAmt ml,ingrName2::ingrAmt2 gallon)<br><input type='text' name='recipe' size'20'>
+<input type='submit'>
+</form>
+</body></html>"""
     return html + final + end
 
 def inventory():
@@ -259,10 +328,17 @@ h1 {color:red;}</style><b><h1>Your inventory</h1></b></head>
               <td><b>Amount</b></td>
               """
     result = ""
-    for liquor_typ in liquor_types:
+    for liquor_typ in db.get_all_bottle_types():
         result += "<tr><td>" + liquor_typ[0] + "</td><td>" + liquor_typ[1] + "</td><td>" + str(db.get_liquor_amount(liquor_typ[0], liquor_typ[1])) + " ml</td></tr>"
 
-    end = """</tr></table></body></html>"""
+    end = """
+</tr></table>
+<br>
+<form action='recv_inventory_add'>
+Liquor to add? (Format: Johnnie Walker, black label, 500 ml)<br><input type='text' name='liquor' size'20'>
+<input type='submit'>
+</form>
+</body></html>"""
     return html + result + end
 
 def liquortypes():
@@ -285,10 +361,17 @@ h1 {color:red;}</style><b><h1>Liquor Types</h1></b></head>
       <td><b>Manufacturer</b></td>
           <td><b>Liquor</b></td>
             </tr>"""
-    for liquor_typ in liquor_types:
+    for liquor_typ in db.get_all_bottle_types():
         temp = "<tr><td>" + liquor_typ[0] + "</td><td>" + liquor_typ[1] + "</td></tr>"
         final += temp
-    end = """</table></body></html>"""
+    end = """
+</table>
+<br>
+<form action='recv_bottle_add'>
+Bottle Type to add? (Format: Johnnie Walker, black label, blended scotch whiskey)<br><input type='text' name='bottle' size'20'>
+<input type='submit'>
+</form>
+</body></html>"""
     return html + final + end
 
 

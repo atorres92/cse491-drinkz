@@ -1,0 +1,29 @@
+How to bulk load recipes:
+
+Data must be of the form:
+
+"scotch on the rocks,blended scotch::4 oz, vodka::20 ml\nblended
+death,blended milk::10 gallon, hotsauce::20 oz, wine::2ml"
+
+this amounts to:
+
+Recipe #1:
+Name: "scotch on the rocks"
+
+Ingredient #1 Name: "blended scotch"
+Ingredient #1 Amount: "4 oz"
+
+Ingredient #2 Name: "vodka"
+Ingredient #2 Amount: "20 ml"
+
+Recipe #2:
+Name: "blended death"
+
+Ingredient #1 Name: "blended death"
+Ingredient #1 Amount: "10 gallon"
+
+Ingredient #2 Name: "hotsauce"
+Ingredient #2 Amount: "20 oz"
+
+Ingredient #3 Name: "wine"
+Ingredient #3 Amount: "2 ml"

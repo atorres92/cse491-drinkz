@@ -48,6 +48,9 @@ class FailedToAddBottle(Exception):
 class FailedToAddInventory(Exception):
     pass
 
+class FailedToAddRecipes(Exception):
+    pass
+
 class DataReaderException(Exception):
     pass
 
@@ -85,6 +88,28 @@ def _check_bottle_type_exists(mfg, liquor):
             return True
 
     return False
+
+def get_all_bottle_types():
+    bottle_types = []
+    for (m, l, _) in _bottle_types_db:
+        bottle_types.append((m,l));
+    return bottle_types
+
+
+##NEW##
+def get_usable_recipes():
+    usable_recipes = []
+    ingredients_needed = []
+    
+    for recipe in _recipe_db.values():
+        numIng = len(recipe.get_ingredients())
+        currHav = 0
+        for ingredient in recipe.get_ingredients():
+            if ( check_recipe_needs(ingredient)[1] == 0 ):
+                currHav+=1
+        if (currHav == numIng):
+            usable_recipes.append(recipe.get_name())
+    return usable_recipes
 
 def check_inventory_for_type(typ):
     b_list = []
