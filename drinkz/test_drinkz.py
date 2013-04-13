@@ -230,6 +230,16 @@ def test_get_liquor_inventory():
 
     assert x == [('Johnnie Walker', 'Black Label')], x
 
+def test_get_bottle_types():
+    db._reset_db()
+
+    db.add_bottle_type('Johnnie Walker', 'Milk Label', 'blended milk')
+    db.add_bottle_type('Johnnie Weens', 'Milky Labels', 'okayface.jpg')
+
+    numBottleTypes = len(db.get_all_bottle_types())
+
+    assert numBottleTypes == 2, numBottleTypes
+    
 def test_get_usable_recipes():
     db._reset_db()
 

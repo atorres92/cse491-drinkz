@@ -1,0 +1,46 @@
+Feature Implementation Write-Up
+
+Use Case Story:
+Brenda is wandering the streets dangerously drunk and nearing
+starvation, and wants to know what restaurants are open.
+
+Brenda would like bring roast beef to the party.
+
+Brenda also is bringing Red wine and wants to know if someone is
+already bringing it or if it pairs with any dishes currently being
+brought.
+
+Data Component:
+Food data: (Food Type, Food Amount, Drink Pairing)
+Restaurant data: (Restaurant Name, Restaurant closing time, Delivery
+available, distance from current location)
+Geolocation data: use any API that can get geolocation data for nearby restaurants
+
+Internal API:
+
+The Internal API will handle storing, retreiving, and querying of the
+food and restaurant data.  It will use db.py to store in a database a
+dictionary for the restaurant, with the name as the key, and the tuple
+for the values.  db.py will also handle the food type/food
+amount/drink pairing values in a dictionary, with food name as the
+key, and (food amount, drink pairing) as the value.
+
+Web Interface:
+
+Web interface would be having a user input a (Food Type, Food
+Amount, Drink Pairing) into a text field, which will enter into a
+table full of those pairs.  This table will be on a page called "Food
+and Drinks." There will also be another page called "Nearby
+Restaurants" that asks your browser for geolocation data so it can
+find all open restaurants within 2 miles.  The page will have a table
+that will populate after a "Find restaurants" button is clicked.  The
+button will check if Geolocation data was granted, and if not, it will
+ask for a address to input to find nearby restaurants.  The table will
+have (Restaurant Name, time of closing, delivery available, distance
+from current location) columns.
+
+JSON-RPC set of functions:
+rpc_add_restaurant(self, restaurant_name, restaurant_closing time,
+delivery, distance)
+rpc_add_food_pair(self, food_type, food_amount, drink_pairing)
+rpc_add_geolocation(self, location)

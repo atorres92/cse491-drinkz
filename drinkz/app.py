@@ -6,6 +6,7 @@ import db
 import load_bulk_data
 import recipes
 import convert
+import jinja2
 
 import sys
 
@@ -145,6 +146,7 @@ alert("What were you thinking?!");
             liquorStr = "#"
 
         content_type = 'text/html'
+
         data = liquorStr
         fp = StringIO(data)
         load_bulk_data.load_inventory(fp)
@@ -163,10 +165,11 @@ alert("What were you thinking?!");
             bottleStr = "#"
 
         content_type = 'text/html'
+
         data = bottleStr
         fp = StringIO(data)
         load_bulk_data.load_bottle_types(fp)
-        db.get_all_bottle_types()
+        #db.get_all_bottle_types()
         data = "Added Bottle Type: %s<p><a href='./'>Index</a>" % bottleStr
 
         start_response('200 OK', list(html_headers) )
@@ -184,6 +187,7 @@ alert("What were you thinking?!");
         data = recipeStr
         fp = StringIO(data)
         load_bulk_data.load_recipes(fp)
+
         content_type = 'text/html'
         data = "Added Recipe: %s<p><a href='./'>Index</a>" % recipeStr
         
@@ -251,128 +255,121 @@ alert("What were you thinking?!");
 
     def rpc_add(self, a, b):
         return int(a) + int(b)
+
+    def rpc_inventory_add( self, item ):
+        data = item
+        fp = StringIO(data)
+        load_bulk_data.load_inventory(fp)
+        
+    def rpc_bottle_add( self, bottle ):
+        data = bottle
+        fp = StringIO(data)
+        load_bulk_data.load_bottle_types(fp)
+        
+    def rpc_recipe_add( self, recipe ):
+        data = recipe
+        fp = StringIO(data)
+        load_bulk_data.load_recipes(fp)
     
 def converter():
-    return """
-<html>
-<title>Convert to mL</title>
-<head><style type="text/css">
-h1 {color:red;}</style><b><h1>Converter</h1></b></head>
-<body>
+    loader = jinja2.FileSystemLoader('../drinkz/templates')
+
+    env = jinja2.Environment(loader=loader)
+
+    filename = "jinjaPage.html"
+
+    vars = dict(title = "Convert to mL", title2="Enter conversion", addtitle = "Add it... :)", form = """
 <form action='recv'>
 Amount of liquid to convert to ml? <input type='text' name='amount' size'20'>
 <input type='submit'>
 </form>
-<p><a href='./'>Index</a></p>
-</body>
-</html>
-"""
-        
+""", names = "")
+
+    result = env.get_template(filename).render(vars).encode('ascii','ignore')
+    return result
+
 def recipes():
-    html =  """
-<html>
-<title>Recipes here!</title>
-<head><style type="text/css">
-h1 {color:red;}</style><b><h1>Recipes</h1></b></head>
-<body>
-<p><a href='./'>Index</a></p>
-<p>Recipes</p>
-<p><a href='inventory'>Inventory</a></p>
-<p><a href='liquortypes'>Liquor Types</a></p>
-<p><a href='converter'>Converter</a></p>
-<p>Recipes: </p>
-<table>
-<tr>
-  <td> <b>Recipe Name</b> </td>
-    <td> <b>Have Ingredients?</b></td>
-    </tr>"""
-    result =""
-    name = ""
-    final = ""
+
+    #this sets up jinja2
+    loader = jinja2.FileSystemLoader('../drinkz/templates')
+    env = jinja2.Environment(loader=loader)
+
+    #pick filename to render
+    filename = "jinjaPage.html"
+
+    recipeList = []
     for recipe in db.get_all_recipes():
-        name =  "<tr><td>" + recipe.get_name() + "</td><td>"
         if len(recipe.need_ingredients()) > 0:
-            result =  "<td>No :(</td></tr>"
+            result = "No :("
         else:
-            result =  "<td>Yup :D </td></tr>"
-        final += name + result
+            result = "Yup :D"
 
+        recipeList.append(recipe.get_name() + ", " + result)
 
-    end = """
-</tr></table>
-<br>
-<form action='recv_recipe_add'>
+    vars = dict(title = 'Recipes Here!', title2 = 'Recipes', addtitle = "Submit Recipe",
+                form = """ <form action='recv_recipe_add'>
 Recipe to add? (Format: recipeName,ingrName::ingrAmt ml,ingrName2::ingrAmt2 gallon)<br><input type='text' name='recipe' size'20'>
 <input type='submit'>
-</form>
-</body></html>"""
-    return html + final + end
+</form> """, names = recipeList)
 
+    #Since Nosetests will fail since it isn't run in the drinkz directory, but in the home dir :( 
+    try:
+        template = env.get_template(filename)
+    except:
+        loader = jinja2.FileSystemLoader('./drinkz/templates')
+        env = jinja2.Environment(loader=loader)
+        template = env.get_template(filename)
+        
+    result = template.render(vars).encode('ascii','ignore')
+    return result
+    
 def inventory():
-    html =  """
-<html>
-<title>Inventory!!!</title>
-<head><style type="text/css">
-h1 {color:red;}</style><b><h1>Your inventory</h1></b></head>
-<body>
-<p><a href='./'>Index</a></p>
-<p><a href='recipes'>Recipes</a></p>
-<p>Inventory</p>
-<p><a href='liquortypes'>Liquor Types</a></p>
-<p><a href='converter'>Converter</a></p>
-<p>Inventory:</p>
-<table>
-  <tr>
-      <td><b>Manufacturer</b></td>
-          <td><b>Liquor</b></td>
-              <td><b>Amount</b></td>
-              """
-    result = ""
-    for liquor_typ in db.get_all_bottle_types():
-        result += "<tr><td>" + liquor_typ[0] + "</td><td>" + liquor_typ[1] + "</td><td>" + str(db.get_liquor_amount(liquor_typ[0], liquor_typ[1])) + " ml</td></tr>"
 
-    end = """
-</tr></table>
-<br>
+    loader = jinja2.FileSystemLoader('../drinkz/templates')
+    env = jinja2.Environment(loader=loader)
+
+    filename = "jinjaPage.html"
+
+    inventoryList = []
+    for liquor_typ in db.get_all_bottle_types():
+        inventoryList.append(str(liquor_typ[0]) + ", " + str(liquor_typ[1]) + ", " + str(db.get_liquor_amount(liquor_typ[0], liquor_typ[1])) + " ml")
+
+
+    vars = dict(title = "Inventory", title2 = "Your Inventory", addtitle = "Add To Your Inventory", form = """
 <form action='recv_inventory_add'>
 Liquor to add? (Format: Johnnie Walker, black label, 500 ml)<br><input type='text' name='liquor' size'20'>
 <input type='submit'>
 </form>
-</body></html>"""
-    return html + result + end
+""", names=inventoryList)
 
+    template = env.get_template(filename)
+
+    result = template.render(vars).encode('ascii','ignore')
+    return result
+                
 def liquortypes():
-    html = ""
-    temp = ""
-    final = ""
-    end = ""
+    loader = jinja2.FileSystemLoader('../drinkz/templates')
+    env = jinja2.Environment(loader=loader)
+
+    filename = "jinjaPage.html"
+
+    liquortypesList = []
     
-    html = """
-<html><title>Liquor types!</title><head><style type="text/css">
-h1 {color:red;}</style><b><h1>Liquor Types</h1></b></head>
-    <body><p><a href='./'>Index</a></p>
-    <p><a href='recipes'>Recipes</a></p>
-    <p><a href='inventory'>Inventory</a></p>
-    <p>Liquor Types</p>
-    <p><a href='converter'>Converter</a></p>
-    <p>Liquor Types: </p>
-    <table>
-    <tr>
-      <td><b>Manufacturer</b></td>
-          <td><b>Liquor</b></td>
-            </tr>"""
     for liquor_typ in db.get_all_bottle_types():
-        temp = "<tr><td>" + liquor_typ[0] + "</td><td>" + liquor_typ[1] + "</td></tr>"
-        final += temp
-    end = """
-</table>
-<br>
+        liquortypesList.append(str(liquor_typ[0]) + ", " + str(liquor_typ[1]) + ", " )
+
+    vars = dict(title = "Liquor Types", title2 = "Your Liquor Types", addtitle="Add Bottle Type", form = """
 <form action='recv_bottle_add'>
 Bottle Type to add? (Format: Johnnie Walker, black label, blended scotch whiskey)<br><input type='text' name='bottle' size'20'>
 <input type='submit'>
 </form>
-</body></html>"""
-    return html + final + end
+</body></html>""", names=liquortypesList)
+
+    template = env.get_template(filename)
+
+    result = template.render(vars).encode('ascii','ignore')
+    
+    return result
 
 
 def startServer():

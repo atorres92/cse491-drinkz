@@ -1,0 +1,9 @@
+How to run client tests:
+
+1. Go to /SimpleApp and run command: "python2.7 simple_app.py" without
+quotes
+
+2. Open up a separate terminal and navigate to /SimpleApp, run
+"python test_simple.py arctic.cse.msu.edu/[NAME] [PORT]"
+
+3. If there are any errors, they will show up as assertion failures

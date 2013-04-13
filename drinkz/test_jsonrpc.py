@@ -136,3 +136,84 @@ def test_simpleapp_get_liquor_inventory():
     assert text.find("Johnnie Walker\", \"black label") != -1, text
     assert text.find("Rossi\", \"extra dry vermouth") != -1, text
     
+def test_simpleapp_inventory_add():
+    initDB()
+
+    newApp = app.SimpleApp()
+
+    environ = {}
+    environ['REQUEST_METHOD'] = 'POST'
+    environ['PATH_INFO'] = '/rpc'
+
+    
+    d = dict(method='inventory_add', params=['Johnnie Walker,black label,500 ml'], id=1)
+    encodedJSON = simplejson.dumps(d)
+
+    environ['wsgi.input'] = StringIO(encodedJSON)
+    environ['CONTENT_LENGTH'] = 1000
+
+    def my_start_response(s,h,return_id=d):
+        d['status'] = s
+        d['headers'] = h
+
+    results = newApp.__call__(environ, my_start_response)
+    text = "".join(results)
+
+    result = db.check_inventory("Johnnie Walker", "black label")
+
+    assert result != False, result
+    
+def test_simpleapp_bottle_add():
+    initDB()
+
+    newApp = app.SimpleApp()
+
+    environ = {}
+    environ['REQUEST_METHOD'] = 'POST'
+    environ['PATH_INFO'] = '/rpc'
+
+    d = dict(method='bottle_add', params=['Johnnie Winner,Blob Zinger,Excellent Milk'], id=1)
+    encodedJSON = simplejson.dumps(d)
+
+    environ['wsgi.input'] = StringIO(encodedJSON)
+    environ['CONTENT_LENGTH'] = 1000
+
+    def my_start_response(s,h,return_id=d):
+        d['status'] = s
+        d['headers'] = h
+
+    results = newApp.__call__(environ, my_start_response)
+    text = "".join(results)
+
+    result = ("Johnnie Winner", "Blob Zinger") in db.get_all_bottle_types()
+
+    assert result != False, result
+    
+def test_simpleapp_recipe_add():
+   initDB()
+
+   newApp = app.SimpleApp()
+
+   environ = {}
+   environ['REQUEST_METHOD'] = 'POST'
+   environ['PATH_INFO'] = '/rpc'
+
+   d = dict(method='recipe_add', params=["Moo Moo Milk Vodka,Mohawk::50 gallon,Milk::3 liter"], id=1)
+   encodedJSON = simplejson.dumps(d)
+
+   environ['wsgi.input'] = StringIO(encodedJSON)
+   environ['CONTENT_LENGTH'] = 1000
+
+   def my_start_response(s,h,return_id=d):
+       d['status'] = s
+       d['headers'] = h
+
+   results = newApp.__call__(environ, my_start_response)
+   text = "".join(results)
+
+   result = False
+   for recipe in db.get_all_recipes():
+       if ( recipe.get_name() == "Moo Moo Milk Vodka" ):
+           result = True
+
+   assert result != False, result

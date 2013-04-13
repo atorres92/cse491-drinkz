@@ -55,6 +55,7 @@ def load_bottle_types(fp):
         
     x = []
     n = 0
+
     for line in new_reader:
         if (len(line) != 3):
             continue
