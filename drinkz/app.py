@@ -27,6 +27,14 @@ dispatch = {
     '/converter' : 'converter'
 }
 
+bodyText = """
+<p><a href='./'>Index</a></p>
+<p><a href='recipes'>Recipes</a></p>
+<p><a href='inventory'>Inventory</a></p>
+<p><a href='liquortypes'>Liquor Types</a></p>
+<p><a href='converter'>Converter</a></p>
+"""
+
 html_headers = [('Content-type', 'text/html')]
 #liquor_types = []
 
@@ -36,6 +44,8 @@ def initDB():
 #    for mfg, liquor in db.get_liquor_inventory():
 #        liquor_types.append((mfg, liquor))
 
+    # Run-web should do configuration file
+    #Specifiy file for run-web in init_
 class SimpleApp(object):
     def __call__(self, environ, start_response):
 
@@ -276,9 +286,9 @@ def converter():
 
     env = jinja2.Environment(loader=loader)
 
-    filename = "jinjaPage.html"
+    filename = "jinja_converter.html"
 
-    vars = dict(title = "Convert to mL", title2="Enter conversion", addtitle = "Add it... :)", form = """
+    vars = dict(title = "Convert to mL", title2="Enter conversion", form = """
 <form action='recv'>
 Amount of liquid to convert to ml? <input type='text' name='amount' size'20'>
 <input type='submit'>
@@ -295,7 +305,7 @@ def recipes():
     env = jinja2.Environment(loader=loader)
 
     #pick filename to render
-    filename = "jinjaPage.html"
+    filename = "jinja_recipes.html"
 
     recipeList = []
     for recipe in db.get_all_recipes():
@@ -304,13 +314,13 @@ def recipes():
         else:
             result = "Yup :D"
 
-        recipeList.append(recipe.get_name() + ", " + result)
+        recipeList.append(list([recipe.get_name(), result]))
 
     vars = dict(title = 'Recipes Here!', title2 = 'Recipes', addtitle = "Submit Recipe",
                 form = """ <form action='recv_recipe_add'>
 Recipe to add? (Format: recipeName,ingrName::ingrAmt ml,ingrName2::ingrAmt2 gallon)<br><input type='text' name='recipe' size'20'>
 <input type='submit'>
-</form> """, names = recipeList)
+</form> """, names = recipeList, bodyFormat = bodyText)
 
     #Since Nosetests will fail since it isn't run in the drinkz directory, but in the home dir :( 
     try:
@@ -328,19 +338,18 @@ def inventory():
     loader = jinja2.FileSystemLoader('../drinkz/templates')
     env = jinja2.Environment(loader=loader)
 
-    filename = "jinjaPage.html"
+    filename = "jinja_inventory.html"
 
     inventoryList = []
     for liquor_typ in db.get_all_bottle_types():
-        inventoryList.append(str(liquor_typ[0]) + ", " + str(liquor_typ[1]) + ", " + str(db.get_liquor_amount(liquor_typ[0], liquor_typ[1])) + " ml")
-
+        inventoryList.append(list([str(liquor_typ[0]), str(liquor_typ[1]), str(db.get_liquor_amount(liquor_typ[0], liquor_typ[1])) + " ml"]))
 
     vars = dict(title = "Inventory", title2 = "Your Inventory", addtitle = "Add To Your Inventory", form = """
 <form action='recv_inventory_add'>
 Liquor to add? (Format: Johnnie Walker, black label, 500 ml)<br><input type='text' name='liquor' size'20'>
 <input type='submit'>
 </form>
-""", names=inventoryList)
+""", names=inventoryList, bodyFormat = bodyText)
 
     template = env.get_template(filename)
 
@@ -351,19 +360,19 @@ def liquortypes():
     loader = jinja2.FileSystemLoader('../drinkz/templates')
     env = jinja2.Environment(loader=loader)
 
-    filename = "jinjaPage.html"
+    filename = "jinja_bottle_types.html"
 
     liquortypesList = []
     
     for liquor_typ in db.get_all_bottle_types():
-        liquortypesList.append(str(liquor_typ[0]) + ", " + str(liquor_typ[1]) + ", " )
+        liquortypesList.append(list([str(liquor_typ[0]), str(liquor_typ[1])]))
 
     vars = dict(title = "Liquor Types", title2 = "Your Liquor Types", addtitle="Add Bottle Type", form = """
 <form action='recv_bottle_add'>
 Bottle Type to add? (Format: Johnnie Walker, black label, blended scotch whiskey)<br><input type='text' name='bottle' size'20'>
 <input type='submit'>
 </form>
-</body></html>""", names=liquortypesList)
+</body></html>""", names=liquortypesList, bodyFormat = bodyText)
 
     template = env.get_template(filename)
 

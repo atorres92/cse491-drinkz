@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<title>{{ title }}</title>
+
+<style type='text/css'>
+h1 {color:red;}
+body { font-size: 14px; } </style>
+
+<h1>{{ title2 }}</h1>
+<body>
+{{bodyFormat}}
+<table>
+	<tr>
+		<td><b>Manufacturer</b></td>
+		<td><b>Liquor</b></td>
+		<td><b>Amount</b></td>
+		{% for name in names %}
+			<tr>
+			{% set rowloop = loop %}
+			{% for cell in name %}
+				<td>{{cell}}</td>
+			{% endfor %}
+			</tr>
+		{% endfor %}
+	</tr>
+</table>
+<h1>{{ addtitle }}</h1>
+{{form}}
+</body>
+{% endblock %}
