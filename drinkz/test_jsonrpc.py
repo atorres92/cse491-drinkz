@@ -36,184 +36,85 @@ def initDB():
     db.add_recipe(r1)
     db.add_recipe(r2)
 
-def test_simpleapp_add():
-    initDB()
-
-    newApp = app.SimpleApp()
-
+def make_rpc_call(fn_name, params):
+    d = dict(method=fn_name, params=params, id="0")
+    encoded = simplejson.dumps(d)
+    
     environ = {}
-    environ['REQUEST_METHOD'] = 'POST'
     environ['PATH_INFO'] = '/rpc'
-
-    testDict = dict(method='add', params=[1,2], id=1)
-    encodedJSON = simplejson.dumps(testDict)
-
-    environ['wsgi.input'] = StringIO(encodedJSON)
-    environ['CONTENT_LENGTH'] = 1000
-
-    def my_start_response(s, h, return_in=testDict):
-        testDict['status'] = s
-        testDict['headers'] = h
-
-    results = newApp.__call__(environ, my_start_response)
-    text = "".join(results)
-
-    assert text.find('3') != -1, text
-
-def test_simpleapp_convert_units_to_ml():
-    initDB()
-
-    newApp = app.SimpleApp()
-
-    environ = {}
     environ['REQUEST_METHOD'] = 'POST'
-    environ['PATH_INFO'] = '/rpc'
+    environ['wsgi.input'] = StringIO(encoded)
+    environ['CONTENT_LENGTH'] = len(encoded)
 
-    d = dict(method='convert_units_to_ml', params=['500 gallon'], id=1)
-    encodedJSON = simplejson.dumps(d)
-
-    environ['wsgi.input'] = StringIO(encodedJSON)
-    environ['CONTENT_LENGTH'] = 1000
-
-    def my_start_response(s,h,return_in=d):
+    d = {}
+    def my_start_response(s, h):
         d['status'] = s
         d['headers'] = h
 
-    results = newApp.__call__(environ, my_start_response)
-    text = "".join(results)
+    app_obj = app.SimpleApp()
+    response = app_obj(environ, my_start_response)
 
-    assert text.find('1892705.0') != -1, text
+    x = "".join(response)
+    response = simplejson.loads(x)
+    
+    return response['result']
+
+def test_simpleapp_add():
+    initDB()
+    
+    x = make_rpc_call('add', [1,2])
+        
+    assert x == 3, x
+
+def test_simpleapp_convert_units_to_ml():
+    initDB()
+    
+    x = make_rpc_call('convert_units_to_ml', ['500 gallon'])
+
+    assert '1892705.0' in x
 
 def test_simpleapp_get_recipe_names():
     initDB()
 
-    newApp = app.SimpleApp()
+    x = make_rpc_call('get_recipe_names', [])
 
-    environ = {}
-    environ['REQUEST_METHOD'] = 'POST'
-    environ['PATH_INFO'] = '/rpc'
-
-    d = dict(method='get_recipe_names', params=[], id=1)
-    encodedJSON = simplejson.dumps(d)
-
-    environ['wsgi.input'] = StringIO(encodedJSON)
-    environ['CONTENT_LENGTH'] = 1000
-
-    def my_start_response(s,h,return_in=d):
-        d['status'] = s
-        d['headers'] = h
-
-    results = newApp.__call__(environ, my_start_response)
-    text = "".join(results)
-
-    assert text.find('scotch on the rocks') != -1, text
-    assert text.find('whiskey bath') != -1, text
+    assert 'scotch on the rocks' in x
+    assert 'whiskey bath' in x
 
 def test_simpleapp_get_liquor_inventory():
     initDB()
 
     newApp = app.SimpleApp()
 
-    environ = {}
-    environ['REQUEST_METHOD'] = 'POST'
-    environ['PATH_INFO'] = '/rpc'
+    x = make_rpc_call('get_liquor_inventory', [])
+    
+    print x
 
-    d = dict(method='get_liquor_inventory', params=[], id=1)
-    encodedJSON = simplejson.dumps(d)
-
-    environ['wsgi.input'] = StringIO(encodedJSON)
-    environ['CONTENT_LENGTH'] = 1000
-
-    def my_start_response(s,h,return_id=d):
-        d['status'] = s
-        d['headers'] = h
-
-    results = newApp.__call__(environ, my_start_response)
-    text = "".join(results)
-
-    assert text.find("Gray Goose\", \"vodka") != -1, text
-    assert text.find("Uncle Herman's\", \"moonshine") != -1, text
-    assert text.find("Johnnie Walker\", \"black label") != -1, text
-    assert text.find("Rossi\", \"extra dry vermouth") != -1, text
+    assert ["Gray Goose", "vodka"] in x
+    assert ["Uncle Herman's", "moonshine"] in x
+    assert ["Johnnie Walker", "black label"] in x
+    assert ["Rossi", "extra dry vermouth"] in x
     
 def test_simpleapp_inventory_add():
     initDB()
 
-    newApp = app.SimpleApp()
+    x = make_rpc_call('inventory_add', ['Johnnie Walker,black label,500 ml'])
 
-    environ = {}
-    environ['REQUEST_METHOD'] = 'POST'
-    environ['PATH_INFO'] = '/rpc'
-
-    
-    d = dict(method='inventory_add', params=['Johnnie Walker,black label,500 ml'], id=1)
-    encodedJSON = simplejson.dumps(d)
-
-    environ['wsgi.input'] = StringIO(encodedJSON)
-    environ['CONTENT_LENGTH'] = 1000
-
-    def my_start_response(s,h,return_id=d):
-        d['status'] = s
-        d['headers'] = h
-
-    results = newApp.__call__(environ, my_start_response)
-    text = "".join(results)
-
-    result = db.check_inventory("Johnnie Walker", "black label")
-
-    assert result != False, result
+    assert db.check_inventory('Johnnie Walker', 'black label') == True
     
 def test_simpleapp_bottle_add():
     initDB()
 
-    newApp = app.SimpleApp()
-
-    environ = {}
-    environ['REQUEST_METHOD'] = 'POST'
-    environ['PATH_INFO'] = '/rpc'
-
-    d = dict(method='bottle_add', params=['Johnnie Winner,Blob Zinger,Excellent Milk'], id=1)
-    encodedJSON = simplejson.dumps(d)
-
-    environ['wsgi.input'] = StringIO(encodedJSON)
-    environ['CONTENT_LENGTH'] = 1000
-
-    def my_start_response(s,h,return_id=d):
-        d['status'] = s
-        d['headers'] = h
-
-    results = newApp.__call__(environ, my_start_response)
-    text = "".join(results)
-
-    result = ("Johnnie Winner", "Blob Zinger") in db.get_all_bottle_types()
-
-    assert result != False, result
+    x = make_rpc_call('bottle_add', ['Johnnie Winner,Blob Zinger,Excellent Milk'])
     
+    assert ('Johnnie Winner','Blob Zinger') in db.get_all_bottle_types()   
 def test_simpleapp_recipe_add():
    initDB()
 
-   newApp = app.SimpleApp()
+   x = make_rpc_call( 'recipe_add', ["Moo Moo Milk Vodka,Mohawk::50 gallon,Milk::3 liter"] )
+   names = []
+   recipes = db.get_all_recipes()
+   for name in recipes:
+       names.append(name.get_name())
 
-   environ = {}
-   environ['REQUEST_METHOD'] = 'POST'
-   environ['PATH_INFO'] = '/rpc'
-
-   d = dict(method='recipe_add', params=["Moo Moo Milk Vodka,Mohawk::50 gallon,Milk::3 liter"], id=1)
-   encodedJSON = simplejson.dumps(d)
-
-   environ['wsgi.input'] = StringIO(encodedJSON)
-   environ['CONTENT_LENGTH'] = 1000
-
-   def my_start_response(s,h,return_id=d):
-       d['status'] = s
-       d['headers'] = h
-
-   results = newApp.__call__(environ, my_start_response)
-   text = "".join(results)
-
-   result = False
-   for recipe in db.get_all_recipes():
-       if ( recipe.get_name() == "Moo Moo Milk Vodka" ):
-           result = True
-
-   assert result != False, result
+   assert 'Moo Moo Milk Vodka' in names

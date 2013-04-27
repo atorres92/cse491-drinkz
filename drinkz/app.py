@@ -186,6 +186,9 @@ alert("What were you thinking?!");
         return [data]
     
     def recv_recipe_add(self, environ, start_response):
+        
+        print "hi"
+        
         formdata = environ['QUERY_STRING']
         results = urlparse.parse_qs(formdata)
 
