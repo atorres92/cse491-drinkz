@@ -68,6 +68,7 @@ class SimpleApp(object):
 <html>
 <title>cse491-drinkz home</title>
 <head>
+<script type="text/javascript" charset="utf-8" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
 <style type="text/css">
 h1 {color:red;}</style><b><h1>Home Page</h1></b></head>
 <body>
@@ -77,10 +78,17 @@ h1 {color:red;}</style><b><h1>Home Page</h1></b></head>
 <p><a href='liquortypes'>Liquor Types</a></p>
 <p><a href='converter'>Converter</a></p>
 </body>
-<script>
+<script type="text/javascript">
 function alertBox()
 {
-alert("What were you thinking?!");
+$.ajax({
+    url: '/rpc',
+    data: JSON.stringify ({method:'alert', params:[], id:"0"} ),
+    type: "POST",
+    dataType: "json",
+    success: function(data) { alert(data.result) },
+    error: function (err) {alert("You got an error, dummy! Fix it!!") }
+    });
 }
 </script>
 <input type="button" onclick="alertBox()" value="DON'T CLICK!">
@@ -259,6 +267,9 @@ alert("What were you thinking?!");
         for (m,l) in db.get_liquor_inventory():
             i.append((m,l))
         return i
+    
+    def rpc_alert(self):
+        return "You clicked the button I told you not to. Click it again to win a free iPad!"
 
     def rpc_hello(self):
         return 'world!'
