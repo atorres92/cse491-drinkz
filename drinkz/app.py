@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+
 from wsgiref.simple_server import make_server
 import urlparse
 import simplejson
@@ -7,6 +8,9 @@ import load_bulk_data
 import recipes
 import convert
 import jinja2
+
+from Cookie import SimpleCookie
+import uuid
 
 import sys
 
@@ -20,11 +24,16 @@ dispatch = {
     '/recv_inventory_add' : 'recv_inventory_add',
     '/recv_bottle_add' : 'recv_bottle_add',
     '/recv_recipe_add' : 'recv_recipe_add',
+    '/login_1' : 'login1',
+    '/login1_process' : 'login1_process',
+    '/logout' : 'logout',
+    '/status' : 'status',
     '/rpc'  : 'dispatch_rpc',
     '/recipes' : 'recipes',
     '/inventory' : 'inventory',
     '/liquortypes' : 'liquortypes',
     '/converter' : 'converter'
+    
 }
 
 bodyText = """
@@ -33,10 +42,18 @@ bodyText = """
 <p><a href='inventory'>Inventory</a></p>
 <p><a href='liquortypes'>Liquor Types</a></p>
 <p><a href='converter'>Converter</a></p>
+<p><a href='login_1'>Login</a></p>
+<p><a href='status'>Login Status</a></p>
+<p><a href='logout'>Logout</a></p>
 """
 
-html_headers = [('Content-type', 'text/html')]
 #liquor_types = []
+usernames = {}
+
+loader = jinja2.FileSystemLoader('../drinkz/templates')
+env = jinja2.Environment(loader=loader)
+
+html_headers = [('Content-type', 'text/html')]
 
 def initDB():
     db.load_db('../bin/database')
@@ -71,13 +88,7 @@ class SimpleApp(object):
 <script type="text/javascript" charset="utf-8" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
 <style type="text/css">
 h1 {color:red;}</style><b><h1>Home Page</h1></b></head>
-<body>
-<p>Index</p>
-<p><a href='recipes'>Recipes</a></p>
-<p><a href='inventory'>Inventory</a></p>
-<p><a href='liquortypes'>Liquor Types</a></p>
-<p><a href='converter'>Converter</a></p>
-</body>
+%s
 <script type="text/javascript">
 function alertBox()
 {
@@ -93,10 +104,73 @@ $.ajax({
 </script>
 <input type="button" onclick="alertBox()" value="DON'T CLICK!">
 </html>
-"""
+""" % (bodyText)
         start_response('200 OK', list(html_headers))
         return [data]
 
+    def login1(self, environ, start_response):
+        start_response('200 OK', list(html_headers))
+
+        title = 'login'
+        template = env.get_template('jinja_login.html')
+        return str(template.render(locals()))
+    
+    def login1_process(self, environ, start_response):
+        formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+
+        name = results['name'][0]
+        content_type = 'text/html'
+
+        # authentication would go here -- is this a valid username/password,
+        # for example?
+
+        k = str(uuid.uuid4())
+        usernames[k] = name
+
+        headers = list(html_headers)
+        headers.append(('Location', '/status'))
+        headers.append(('Set-Cookie', 'name1=%s' % k))
+
+        start_response('302 Found', headers)
+        return ["Redirect to /status..."]
+    
+    def status(self, environ, start_response):
+        start_response('200 OK', list(html_headers))
+
+        name1 = ''
+        name1_key = '*empty*'
+        if 'HTTP_COOKIE' in environ:
+            c = SimpleCookie(environ.get('HTTP_COOKIE', ''))
+            if 'name1' in c:
+                key = c.get('name1').value
+                name1 = usernames.get(key, '')
+                name1_key = key
+                
+        title = 'login status'
+        template = env.get_template('jinja_status.html')
+        return str(template.render(locals()))
+    
+    def logout(self, environ, start_response):
+        if 'HTTP_COOKIE' in environ:
+            c = SimpleCookie(environ.get('HTTP_COOKIE', ''))
+            if 'name1' in c:
+                key = c.get('name1').value
+                name1_key = key
+
+                if key in usernames:
+                    del usernames[key]
+                    print 'DELETING'
+
+        pair = ('Set-Cookie',
+                'name1=deleted; Expires=Thu, 01-Jan-1970 00:00:01 GMT;')
+        headers = list(html_headers)
+        headers.append(('Location', '/status'))
+        headers.append(pair)
+
+        start_response('302 Found', headers)
+        return ["Redirect to /status..."]
+    
     def recipes(self, environ, start_response):
         content_type = 'text/html'
         data = recipes()

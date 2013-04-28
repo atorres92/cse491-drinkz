@@ -1,3 +1,7 @@
+~Homework #6 Revision:
+-Food and drink pairing will be implemented as outlined below.
+-Geolocation and Restaurant distance won't be.
+
 Feature Implementation Write-Up
 
 Use Case Story:
