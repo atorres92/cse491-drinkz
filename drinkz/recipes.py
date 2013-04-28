@@ -20,3 +20,9 @@ class Recipe(object):
 
     def get_ingredients(self):
         return self._ingredients
+
+    def get_ingredientsStr(self):
+        ingrStr = ""
+        for ingredient in self._ingredients:
+            ingrStr += ( ingredient[0] + "::" + ingredient[1] + "\n" )
+        return ingrStr

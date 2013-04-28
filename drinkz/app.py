@@ -39,7 +39,7 @@ html_headers = [('Content-type', 'text/html')]
 #liquor_types = []
 
 def initDB():
-    db.load_db('database')
+    db.load_db('../bin/database')
 
 #    for mfg, liquor in db.get_liquor_inventory():
 #        liquor_types.append((mfg, liquor))
@@ -185,10 +185,7 @@ alert("What were you thinking?!");
         start_response('200 OK', list(html_headers) )
         return [data]
     
-    def recv_recipe_add(self, environ, start_response):
-        
-        print "hi"
-        
+    def recv_recipe_add(self, environ, start_response):        
         formdata = environ['QUERY_STRING']
         results = urlparse.parse_qs(formdata)
 
