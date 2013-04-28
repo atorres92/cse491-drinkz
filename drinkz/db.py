@@ -24,11 +24,41 @@ def _reset_db():
         cursor.execute('''DROP TABLE IF EXISTS bottletypes''')
         cursor.execute('''DROP TABLE IF EXISTS inventory''')
         cursor.execute('''DROP TABLE IF EXISTS recipe''')
+        cursor.execute('''DROP TABLE IF EXISTS fooddrinkz''')
         
         cursor.execute('''CREATE TABLE bottletypes(Id INTEGER PRIMARY KEY, liquor TEXT, mfg TEXT, typ TEXT)''')
         cursor.execute('''CREATE TABLE inventory(Id INTEGER PRIMARY KEY, liquor TEXT, mfg TEXT, amount FLOAT)''')
         cursor.execute('''CREATE TABLE recipe(Id INTEGER PRIMARY KEY, name TEXT, ingredients TEXT)''')
+        cursor.execute('''CREATE TABLE fooddrinkz(Id INTEGER PRIMARY KEY, food TEXT, drinkz TEXT)''')
         
+        conn.commit()
+        
+    except sqlite3.Error, e:
+        print "bad table!"
+        print "Error %s:" % e.args[0]
+    finally:
+        if conn:
+            conn.close()
+            
+#FOOD_DRINKZ SQLITE#
+def db_fooddrinkz_insert(food, drinkz):
+    conn = sqlite3.connect("tables.db")
+    
+    #food stored in database as string
+    #drinkz stored in database as list, like so: "drink1\ndrink2\ndrink3\n..."
+    
+    drinks = ""
+    
+    #food ex: 'Chicken'
+    #drinkz ex: ['drink1', 'drink2', 'drink3']
+    
+    for drink in drinkz:
+        drinks += drink + "\n"
+        
+    try:
+        cursor = conn.cursor()
+        
+        cursor.execute("INSERT INTO fooddrinkz(food,drinkz) VALUES(?, ?)", (food,drinks,))        
         conn.commit()
         
     except sqlite3.Error, e:
@@ -36,11 +66,60 @@ def _reset_db():
     finally:
         if conn:
             conn.close()
-    
-    global _bottle_types_db, _inventory_db, _recipe_db
-    _bottle_types_db = set()
-    _inventory_db = {}
-    _recipe_db = {}
+            
+def db_fooddrinkz_checkexists(food, drinkz):
+    conn = sqlite3.connect("tables.db")
+
+    drinks = ""
+
+    for drink in drinkz:
+        drinks += drink + "\n"
+
+    try:
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT food,drinkz FROM fooddrinkz WHERE food = ? AND drinkz = ?", (food,drinks,))        
+        conn.commit()
+        
+        rows =  cursor.fetchall()
+        
+        if (len(rows) == 0):
+            return False
+        else:
+            return True
+                
+    except sqlite3.Error, e:
+        print "Error %s:" % e.args[0]
+    finally:
+        if conn:
+            conn.close()
+            
+def db_fooddrinkz_getall():
+    conn = sqlite3.connect("tables.db")
+
+    try:
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT food,drinkz FROM fooddrinkz")        
+        conn.commit()        
+
+        b_list = []
+
+        while True:
+            row =  cursor.fetchone()
+            d_list = []
+            
+            if row == None:
+                break
+            
+            b_list.append((str(row[0]),str(row[1]).splitlines()))
+        return b_list
+                        
+    except sqlite3.Error, e:
+        print "Error %s:" % e.args[0]
+    finally:
+        if conn:
+            conn.close()
     
 #BOTTLE_TYPES SQLITE#
 def db_bottletypes_insert(mfg, liquor, typ):
@@ -375,6 +454,9 @@ class FailedToAddInventory(Exception):
 class FailedToAddRecipes(Exception):
     pass
 
+class FailedToAddFooddrinkz(Exception):
+    pass
+
 class DataReaderException(Exception):
     pass
 
@@ -385,6 +467,9 @@ class InvalidFormatException(Exception):
     pass
 
 class DuplicateRecipeName(Exception):
+    pass
+
+class DuplicateFoodDrinkz(Exception):
     pass
 
 def add_bottle_type(mfg, liquor, typ):
@@ -413,6 +498,17 @@ def add_recipe(r):
     
     db_recipe_insert( r.get_name(), r.get_ingredientsStr() )
     
+def add_fooddrinkz(food, drinkz):
+    if ( db_fooddrinkz_checkexists(food,drinkz) ):
+        raise DuplicateFoodDrinkz
+    db_fooddrinkz_insert(food, drinkz)
+    
+def check_fooddrinks(food,drinkz):
+    return db_fooddrinkz_checkexists(food,drinkz)
+    
+def get_all_fooddrinkz(): 
+    return db_fooddrinkz_getall()
+
 def get_recipe(name):
     result = db_recipe_getrecipe(name)
     return result

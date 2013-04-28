@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<title>cse491-drinkz home</title>
+<head>
+<script type="text/javascript" charset="utf-8" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+<style type="text/css">
+h1 {color:red;}</style><b><h1>Home Page</h1></b></head>
+{{bodyFormat}}
+<script type="text/javascript">
+function alertBox()
+{
+$.ajax({
+    url: '/rpc',
+    data: JSON.stringify ({method:'alert', params:[], id:"0"} ),
+    type: "POST",
+    dataType: "json",
+    success: function(data) { alert(data.result) },
+    error: function (err) {alert("You got an error, dummy! Fix it!!") }
+    });
+}
+</script>
+<input type="button" onclick="alertBox()" value="DON'T CLICK!">
+{% endblock %}

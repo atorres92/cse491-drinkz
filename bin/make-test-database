@@ -21,7 +21,10 @@ def main(args):
 
     drinkz.db.add_bottle_type('Rossi', 'extra dry vermouth', 'vermouth')
     drinkz.db.add_to_inventory('Rossi', 'extra dry vermouth', '24 oz')
-
+    
+    drinkz.db.add_fooddrinkz('Chicken', ['blended scotch', 'unflavored chipotle mayo vodka', 'green vermouth with tobacco sauce', 'sriracha juice'])
+    drinkz.db.add_fooddrinkz('Green eggs', ['Delicious fried vodka', 'Yummy watered down jack daniels', 'quadruple distilled vodka', 'pale ale'])
+	
     r1 = drinkz.recipes.Recipe('scotch on the rocks', [('blended scotch', '4 oz')])
     r2 = drinkz.recipes.Recipe('whiskey bath', [('blended scotch', '6 liter')])
     drinkz.db.add_recipe(r1)

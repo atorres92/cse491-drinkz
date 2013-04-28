@@ -129,6 +129,7 @@ def load_recipes(fp):
     for line in new_reader:
         ingList = []
         try:
+            print line
             recipeName = line[0]
             for ing in line[1:]: #Recipe will be slot 0, all ings will slots 1-n
                 ingList.append(tuple(ing.split('::')))
@@ -139,5 +140,41 @@ def load_recipes(fp):
             db.add_recipe( recipe )
         except:
             db.FailedToAddRecipes(Exception)
+        n+=1
+    return n
+
+def load_food_drinkz(fp):
+    """
+    Loads in data of the recipe from a CSV file.
+
+    Takes a file pointer.
+
+    Adds data to database
+
+    Returns number of records loaded.
+
+    Note that a RecipeMissing exception is raised if recipes_db does not contain
+    the name or type of recipe.
+    """
+    try:
+        new_reader = data_reader(fp)
+    except:
+        db.DataReaderException(Exception)
+
+    n = 0
+
+    for line in new_reader:
+        print line
+        drinkz = []
+        try:
+            food = str(line[0]) #food will be line[0]
+            for drink in line[1:]: #Food name is line[0], drinks are line[1], line[2]...line[n]
+                drinkz.append(str(drink))
+        except:
+            db.InvalidFormatException(Exception)
+        try:
+            db.add_fooddrinkz(food, drinkz)
+        except:
+            db.FailedToAddFooddrinkz(Exception)
         n+=1
     return n

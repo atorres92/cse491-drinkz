@@ -4,6 +4,17 @@ INSERT INTO "bottletypes" VALUES(1,'black label','Johnnie Walker','blended scotc
 INSERT INTO "bottletypes" VALUES(2,'moonshine','Uncle Herman''s','blended scotch');
 INSERT INTO "bottletypes" VALUES(3,'vodka','Gray Goose','unflavored vodka');
 INSERT INTO "bottletypes" VALUES(4,'extra dry vermouth','Rossi','vermouth');
+CREATE TABLE fooddrinkz(Id INTEGER PRIMARY KEY, food TEXT, drinkz TEXT);
+INSERT INTO "fooddrinkz" VALUES(1,'Chicken','blended scotch
+unflavored chipotle mayo vodka
+green vermouth with tobacco sauce
+sriracha juice
+');
+INSERT INTO "fooddrinkz" VALUES(2,'Green eggs','Delicious fried vodka
+Yummy watered down jack daniels
+quadruple distilled vodka
+pale ale
+');
 CREATE TABLE inventory(Id INTEGER PRIMARY KEY, liquor TEXT, mfg TEXT, amount FLOAT);
 INSERT INTO "inventory" VALUES(1,'black label','Johnnie Walker',500.0);
 INSERT INTO "inventory" VALUES(2,'moonshine','Uncle Herman''s',5000.0);

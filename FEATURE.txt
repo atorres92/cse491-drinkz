@@ -1,5 +1,5 @@
 ~Homework #6 Revision:
--Food and drink pairing will be implemented as outlined below.
+-Food and drink pairing will be implemented as outlined below, minus the food amount (Unncessary).
 -Geolocation and Restaurant distance won't be.
 
 Feature Implementation Write-Up

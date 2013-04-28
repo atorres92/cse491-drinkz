@@ -24,6 +24,7 @@ dispatch = {
     '/recv_inventory_add' : 'recv_inventory_add',
     '/recv_bottle_add' : 'recv_bottle_add',
     '/recv_recipe_add' : 'recv_recipe_add',
+    '/recv_fooddrinkz_add' : 'recv_fooddrinkz_add',
     '/login_1' : 'login1',
     '/login1_process' : 'login1_process',
     '/logout' : 'logout',
@@ -32,6 +33,7 @@ dispatch = {
     '/recipes' : 'recipes',
     '/inventory' : 'inventory',
     '/liquortypes' : 'liquortypes',
+    '/food_and_drinkz' : 'food_and_drinkz',
     '/converter' : 'converter'
     
 }
@@ -41,6 +43,7 @@ bodyText = """
 <p><a href='recipes'>Recipes</a></p>
 <p><a href='inventory'>Inventory</a></p>
 <p><a href='liquortypes'>Liquor Types</a></p>
+<p><a href='food_and_drinkz'>Food and Drinks</a></p>
 <p><a href='converter'>Converter</a></p>
 <p><a href='login_1'>Login</a></p>
 <p><a href='status'>Login Status</a></p>
@@ -81,33 +84,18 @@ class SimpleApp(object):
         return fn(environ, start_response)
             
     def index(self, environ, start_response):
-        data = """
-<html>
-<title>cse491-drinkz home</title>
-<head>
-<script type="text/javascript" charset="utf-8" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
-<style type="text/css">
-h1 {color:red;}</style><b><h1>Home Page</h1></b></head>
-%s
-<script type="text/javascript">
-function alertBox()
-{
-$.ajax({
-    url: '/rpc',
-    data: JSON.stringify ({method:'alert', params:[], id:"0"} ),
-    type: "POST",
-    dataType: "json",
-    success: function(data) { alert(data.result) },
-    error: function (err) {alert("You got an error, dummy! Fix it!!") }
-    });
-}
-</script>
-<input type="button" onclick="alertBox()" value="DON'T CLICK!">
-</html>
-""" % (bodyText)
         start_response('200 OK', list(html_headers))
-        return [data]
+        
+        filename = "jinja_index.html"
 
+        title = 'index'
+        vars = dict(bodyFormat = bodyText)
+
+        template = env.get_template(filename)
+    
+        result = template.render(vars).encode('ascii','ignore')
+        return result
+    
     def login1(self, environ, start_response):
         start_response('200 OK', list(html_headers))
 
@@ -189,7 +177,14 @@ $.ajax({
         data = liquortypes()
         start_response('200 OK', list(html_headers))
         return[data]
-    
+        
+    def food_and_drinkz(self, environ, start_response):
+        print "hello!"
+        content_type = 'text/html'
+        data = foodanddrinkz()
+        start_response('200 OK', list(html_headers))
+        return[data]
+        
     def error(self, environ, start_response):
         status = "404 Not Found"
         content_type = 'text/html'
@@ -275,13 +270,32 @@ $.ajax({
             recipeStr = results['recipe'][0]
         else:
             recipeStr = '#'
-
+            
         data = recipeStr
         fp = StringIO(data)
         load_bulk_data.load_recipes(fp)
 
         content_type = 'text/html'
         data = "Added Recipe: %s<p><a href='./'>Index</a>" % recipeStr
+        
+        start_response('200 OK', list(html_headers) )
+        return [data]
+    
+    def recv_fooddrinkz_add(self, environ, start_response):        
+        formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+
+        if ( 'food' in results.keys() ):
+            fooddrinkStr = results['food'][0]
+        else:
+            fooddrinkStr = '#'
+
+        data = fooddrinkStr
+        fp = StringIO(data)
+        load_bulk_data.load_food_drinkz(fp)
+
+        content_type = 'text/html'
+        data = "Added Food: %s<p><a href='./'>Index</a>" % fooddrinkStr
         
         start_response('200 OK', list(html_headers) )
         return [data]
@@ -465,6 +479,28 @@ Bottle Type to add? (Format: Johnnie Walker, black label, blended scotch whiskey
     
     return result
 
+def foodanddrinkz():
+    loader = jinja2.FileSystemLoader('../drinkz/templates')
+    env = jinja2.Environment(loader=loader)
+
+    filename = "jinja_food_and_drinkz.html"
+
+    foodtypesList = []
+    
+    foodtypesList= db.get_all_fooddrinkz()
+
+    vars = dict(title = "Food and Drinks Pairing", title2 = "Pairings:", addtitle="Add food type", form = """
+<form action='recv_fooddrinkz_add'>
+Food Type to add? (Format: Food,drink1,drink2,drink3)<br><input type='text' name='food' size'20'>
+<input type='submit'>
+</form>
+</body></html>""", names=foodtypesList, bodyFormat = bodyText)
+
+    template = env.get_template(filename)
+
+    result = template.render(vars).encode('ascii','ignore')
+    
+    return result    
 
 def startServer():
     import random, socket
