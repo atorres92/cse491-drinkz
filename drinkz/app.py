@@ -205,7 +205,9 @@ class SimpleApp(object):
         
         start_response('200 OK', list(html_headers))
         return [data]
-
+    
+    #Not needed anymore, using JSON-RPC with AJAX and jquery
+    """
     def recv(self, environ, start_response):
         formdata = environ['QUERY_STRING']
         results = urlparse.parse_qs(formdata)
@@ -222,7 +224,8 @@ class SimpleApp(object):
 
         start_response('200 OK', list(html_headers))
         return [data]
-
+    """
+    
     def recv_inventory_add(self, environ, start_response):
         formdata = environ['QUERY_STRING']
         results = urlparse.parse_qs(formdata)
@@ -361,7 +364,11 @@ class SimpleApp(object):
 
     def rpc_hello(self):
         return 'world!'
-
+    
+    def rpc_convert(self, amount):
+        amount = str(convert.convert_to_ml(amount))
+        return amount
+        
     def rpc_add(self, a, b):
         return int(a) + int(b)
 
@@ -388,11 +395,32 @@ def converter():
     filename = "jinja_converter.html"
 
     vars = dict(title = "Convert to mL", title2="Enter conversion", form = """
-<form action='recv'>
-Amount of liquid to convert to ml? <input type='text' name='amount' size'20'>
-<input type='submit'>
-</form>
-""", names = "")
+<p>
+Enter number to convert (ex: 528 liter): <input type='text' class='a' value='' size='15' />
+<p class='toupdate' />
+<p>
+<script type="text/javascript">
+function update_result(c) {
+   text = '<b>converted amount: ' + c + ' ml</b>';
+   $('p.toupdate').html(text);
+}
+
+function convert() {
+ a = $('input.a').val();
+ $.ajax({
+     url: '/rpc', 
+     data: JSON.stringify ({method:'convert', params:[a,], id:"0"} ),
+     type: "POST",
+     dataType: "json",
+     success: function (data) { update_result(data.result) },
+     error: function (err)  { alert ("Error");}
+  });
+}
+$('input.a').change(convert());
+</script>
+<input type="button" onclick="convert()" value="Convert">
+<br>
+""" , names = "")
 
     result = env.get_template(filename).render(vars).encode('ascii','ignore')
     return result

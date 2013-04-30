@@ -11,7 +11,7 @@ def convert_to_ml( amt ):
         amtNum = float(amt.strip('gallon'))
         amtNum *= 3785.41
     else:
-        amtNum = '0 ml'
+        amtNum = 0
     return amtNum
         
     

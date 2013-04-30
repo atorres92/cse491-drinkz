@@ -9,11 +9,16 @@ _recipe_db is a dict as well because the name will be the key, and the recipe fo
 import convert
 import sqlite3
 import recipes
+import couchdb
 import os
 from cPickle import dump, load
 
 def _reset_db():
     "A method only to be used during testing -- toss the existing db info."
+    
+    
+    
+    
     try:
         #sqlite3.register_converter("json", json.loads)
         

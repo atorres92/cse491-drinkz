@@ -7,17 +7,10 @@
 <style type="text/css">
 h1 {color:red;}</style><b><h1>Home Page</h1></b></head>
 {{bodyFormat}}
-<script type="text/javascript">
+<script>
 function alertBox()
 {
-$.ajax({
-    url: '/rpc',
-    data: JSON.stringify ({method:'alert', params:[], id:"0"} ),
-    type: "POST",
-    dataType: "json",
-    success: function(data) { alert(data.result) },
-    error: function (err) {alert("You got an error, dummy! Fix it!!") }
-    });
+alert("You are the 999,999th iPad!  Click here to claim your visitor!");
 }
 </script>
 <input type="button" onclick="alertBox()" value="DON'T CLICK!">
