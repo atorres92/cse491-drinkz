@@ -323,21 +323,30 @@ class SimpleApp(object):
         
         s = socket.socket()
         host = socket.gethostname()
+
+        
+        d = dict(method='add',params=[3,2], id="0")
+
+        encoded = simplejson.dumps(d)
         
         s.connect((host, port))
-        s.send('POST / HTTP/1.0\r\n\r\n')
+        s.send('POST /rpc HTTP/1.0\n' + encoded + '\n\r\n\r\n')
         
         buffer = ""
         while "\r\n\r\n" not in buffer:
             data = s.recv(1024)
             buffer += data
+            
+
         s.close()
         
         print 'got buffer:', buffer
-
+        result = buffer.splitlines()
+        num = result[2]
+        
         content_type = 'text/html'
         
-        data = "Server tested success<p><a href='./'>Index</a>"
+        data = "Server tested success<br>2+3="+num+"<p><a href='./'>Index</a>"
         
         start_response('200 OK', list(html_headers) )
         return [data]

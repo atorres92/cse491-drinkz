@@ -4,7 +4,7 @@ import socket
 import time
 from drinkz.app import SimpleApp
 from StringIO import StringIO
-import json
+import simplejson
 
 the_app = SimpleApp()
 
@@ -34,11 +34,15 @@ while True:
 
    # now, parse the HTTP request.
    lines = buffer.splitlines()
+   print "splitlines:"
+   print lines
    request_line = lines[0]
    request_type, path, protocol = request_line.split()
    print 'GOT', request_type, path, protocol
 
    request_headers = lines[1:]                  # irrelevant, discard for GET.
+   print "request headers:"
+   print request_headers
    
    query_string = ""
    if '?' in path:
@@ -49,31 +53,28 @@ while True:
    environ['PATH_INFO'] = path
    environ['QUERY_STRING'] = query_string
    environ['REQUEST_METHOD'] = request_type
-   
-   #print request_type //'POST'
-
-   print request_headers
-   if (request_type == 'POST'):
-       final = []
-       numbers = []
-       #Handle Post here
-       print "Dealing with post!"
-       #Not sure how to handle POST here :(
+   environ['wsgi.input'] = StringIO(request_headers[0])
+   environ['CONTENT_LENGTH'] = len(request_headers[0])
    
    #Build response method to send to SimpleApp         
    d = {}
    def start_response(status, headers):
       d['status'] = status
       d['headers'] = headers
-      sendStatus = d['status']
 
    results = the_app(environ, start_response)
    # note -- start_response is called by the_app.
-
+   print "results"
+   print results
+   response = simplejson.loads(results[0])
+   print "response: "
+   print response
    response_headers = []
    for k, v in d['headers']:
       h = "%s: %s" % (k, v)
       response_headers.append(h)
+
+   response = "\r\n".join(response_headers)+"\r\n"+str(response['result'])+"\r\n\r\n"
       
    c.send("HTTP/1.0 %s\r\n" % d['status'])
    c.send(response)

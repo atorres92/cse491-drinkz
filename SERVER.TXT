@@ -1,0 +1,9 @@
+HW6.1:
+
+1. Run "python2.7 wsgi_server.py"
+2. Note the port number printed out
+3. In another window, go to /bin/ and run "python2.7 run-web"
+4. Open the website in your browse, click "WSGI Server" link, enter
+the port number listed, and click submit
+5. The simpleApp() will send a json-rpc request to the wsgi_server.py
+to add 2 and 3. The result should be 5 in the resulting page
