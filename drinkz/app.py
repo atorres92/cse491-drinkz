@@ -8,6 +8,7 @@ import load_bulk_data
 import recipes
 import convert
 import jinja2
+import socket
 
 from Cookie import SimpleCookie
 import uuid
@@ -25,6 +26,7 @@ dispatch = {
     '/recv_bottle_add' : 'recv_bottle_add',
     '/recv_recipe_add' : 'recv_recipe_add',
     '/recv_fooddrinkz_add' : 'recv_fooddrinkz_add',
+    '/recv_wsgiserver' : 'recv_wsgiserver', 
     '/login_1' : 'login1',
     '/login1_process' : 'login1_process',
     '/logout' : 'logout',
@@ -34,7 +36,8 @@ dispatch = {
     '/inventory' : 'inventory',
     '/liquortypes' : 'liquortypes',
     '/food_and_drinkz' : 'food_and_drinkz',
-    '/converter' : 'converter'
+    '/converter' : 'converter',
+    '/wsgi_server' : 'wsgi_server'
     
 }
 
@@ -45,6 +48,7 @@ bodyText = """
 <p><a href='liquortypes'>Liquor Types</a></p>
 <p><a href='food_and_drinkz'>Food and Drinks</a></p>
 <p><a href='converter'>Converter</a></p>
+<p><a href='wsgi_server'>WSGI Server Test</a></p>
 <p><a href='login_1'>Login</a></p>
 <p><a href='status'>Login Status</a></p>
 <p><a href='logout'>Logout</a></p>
@@ -179,12 +183,17 @@ class SimpleApp(object):
         return[data]
         
     def food_and_drinkz(self, environ, start_response):
-        print "hello!"
         content_type = 'text/html'
         data = foodanddrinkz()
         start_response('200 OK', list(html_headers))
         return[data]
         
+    def wsgi_server(self, environ, start_response):
+        content_type = 'text/html'
+        data = wsgiserver()
+        start_response('200 OK', list(html_headers))
+        return[data]
+                
     def error(self, environ, start_response):
         status = "404 Not Found"
         content_type = 'text/html'
@@ -303,6 +312,36 @@ class SimpleApp(object):
         start_response('200 OK', list(html_headers) )
         return [data]
     
+    def recv_wsgiserver(self, environ, start_response):
+        formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+
+        if ( 'port' in results.keys() ):
+            port = int(results['port'][0])
+        else:
+            port = 0
+        
+        s = socket.socket()
+        host = socket.gethostname()
+        
+        s.connect((host, port))
+        s.send('POST / HTTP/1.0\r\n\r\n')
+        
+        buffer = ""
+        while "\r\n\r\n" not in buffer:
+            data = s.recv(1024)
+            buffer += data
+        s.close()
+        
+        print 'got buffer:', buffer
+
+        content_type = 'text/html'
+        
+        data = "Server tested success<p><a href='./'>Index</a>"
+        
+        start_response('200 OK', list(html_headers) )
+        return [data]
+        
     def dispatch_rpc(self, environ, start_response):
         # POST requests deliver input data via a file-like handle,
         # with the size of the data specified by CONTENT_LENGTH;
@@ -396,7 +435,7 @@ def converter():
 
     vars = dict(title = "Convert to mL", title2="Enter conversion", form = """
 <p>
-Enter number to convert (ex: 528 liter): <input type='text' class='a' value='' size='15' />
+Enter number to convert (ex: 528 liter): <input type='text' class='a' value='' size='15' id='comments'/>
 <p class='toupdate' />
 <p>
 <script type="text/javascript">
@@ -418,7 +457,7 @@ function convert() {
 }
 $('input.a').change(convert());
 </script>
-<input type="button" onclick="convert()" value="Convert">
+<input type="button" onclick="convert()" value="Convert" id="submit">
 <br>
 """ , names = "")
 
@@ -529,6 +568,26 @@ Food Type to add? (Format: Food,drink1,drink2,drink3)<br><input type='text' name
     result = template.render(vars).encode('ascii','ignore')
     
     return result    
+
+def wsgiserver():
+    loader = jinja2.FileSystemLoader('../drinkz/templates')
+    env = jinja2.Environment(loader=loader)
+
+    print "hi"
+    filename = "jinja_wsgiserver.html"
+
+    vars = dict(title = "Test WSGI server", title2 = "Run in browser and enter port # it is running on:", addtitle="Port:", form = """
+<form action='recv_wsgiserver'>
+Port number:<br><input type='text' name='port' size'20'>
+<input type='submit'>
+</form>
+</body></html>""", bodyFormat = bodyText)
+
+    template = env.get_template(filename)
+
+    result = template.render(vars).encode('ascii','ignore')
+    
+    return result        
 
 def startServer():
     import random, socket
